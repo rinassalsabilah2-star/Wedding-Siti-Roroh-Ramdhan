@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <!-- Meta Viewport: Mencegah auto-zoom berlebih di iPhone/iOS saat input diklik -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Undangan Pernikahan</title>
+
+  <style>
+    /* ==========================================
+       1. RESET & CSS DASAR (MOBILE FRIENDLY)
+       ========================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Scroll vertikal halus (smooth scroll) */
+    html {
+      scroll-behavior: smooth;
+      /* Mencegah ukuran font berubah otomatis saat rotasi di iOS */
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #333333;
+      background-color: none;
+      line-height: 1.5;
+    }
+
+    /* Mengatur font-size input minimal 16px agar iOS Safari tidak melakukan auto-zoom */
+    input, select, textarea, button {
+      font-size: 16px;
+      font-family: inherit;
+    }
+
+    /* ==========================================
+       2. STRUKTUR SECTION FULL SCREEN & VIDEO BACKGROUND
+       ========================================== */
+
+    .section {
+      width: 100%;
+      /* 100svh kompatibel dengan address bar browser HP modern */
+      min-height: 100vh;
+      min-height: 100svh; 
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 20px;
+      position: relative;
+      overflow: hidden; /* Memastikan video tidak keluar batas section */
+    }
+
+      #cover {
+      justify-content: flex-end;
+      padding-bottom: 125px; /* Memberi ruang agar tidak tertutup navbar bawah */
+    }
+
+    /* Styling Elemen Video Background Lokal */
+    .bg-video {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      min-width: 100%;
+      min-height: 100%;
+      width: auto;
+      height: auto;
+      transform: translate(-50%, -50%);
+      object-fit: cover;
+      z-index: 1;
+    }
+    /* Styling Elemen Video Background Lokal (Diubah agar tidak terlalu zoom & proporsional 900x1600) */
+    /* Styling Elemen Video Background Lokal */
+    .bg-video {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      /* Mengatur ukuran agar pas menyesuaikan tinggi container section (9:16) */
+      width: auto;
+      height: 100%;
+      min-width: 100%;
+      min-height: 100%;
+      /* Menggunakan contain atau mengubah skala agar tidak ada bagian penting yang terpotong/zoom berlebih */
+      object-fit: cover; 
+      transform: translate(-50%, -50%);
+      z-index: 1;
+    }
+
+
+    /* Overlay netral di atas video agar teks tetap terbaca dengan jelas */
+    .section::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: (255, 255, 255, 0.7);
+      z-index: 2;
+    }
+
+    /* Pembungkus konten agar selalu berada di atas video & overlay */
+    
+    /* Styling Kotak Konten */
+    .content-box {
+      position: 100vh;
+      z-index: 3;
+      width: 100%;
+      max-width: 300px;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 24px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    /* ==========================================
+       3. ELEMEN INTERAKTIF & FORMS
+       ========================================== */
+    /* Form RSVP */
+    .form-group {
+      margin-bottom: 15px;
+      text-align: left;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #4A4A4A;
+      color: #ffffff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    /* Tampilan Countdown */
+    .timer-container {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    .timer-box {
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 4px;
+      min-width: 50px;
+    }
+    .timer-status {
+      margin-top: 10px;
+      font-weight: bold;
+      color: #d9534f;
+    }
+
+    /* Tombol Musik (Melayang di kanan atas) */
+    .music-control {
+      position: fixed;
+      top: 15px;
+      right: 15px;
+      z-index: 99;
+      background: rgba(0, 0, 0, 0.6);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Navigasi Bawah Tengah */
+    .navbar-bottom {
+      position: fixed;
+      bottom: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 99;
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid #ddd;
+      border-radius: 30px;
+      padding: 8px 16px;
+      display: flex;
+      gap: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .navbar-bottom a {
+      color: #555;
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+    }
+    .navbar-bottom a.active {
+      color: #000;
+      font-weight: bold;
+    }
+    .nav-icon {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    /* Tambahkan margin di penutup agar tidak tertutup navbar */
+    #penutup .content-box {
+      margin-bottom: 60px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==========================================
+       AUDIO BACKGROUND
+       ========================================== -->
+  <!-- Ganti 'file.mp3' dengan nama file musik lokal kamu -->
+  <audio id="bg-music" loop>
+    <source src="1.mp3" type="audio/mpeg">
+    Browser Anda tidak mendukung elemen audio.
+  </audio>
+
+  <!-- Tombol Play/Pause Musik -->
+  <button id="music-btn" class="music-control" onclick="toggleMusic()" aria-label="Kontrol Musik">
+    🎵
+  </button>
+
+  <!-- ==========================================
+       SECTION 1: COVER
+       ========================================== -->
+
+  <section id="cover" class="section">
+    <!-- Video Background Lokal -->
+    <video class="bg-video" autoplay muted loop playsinline>
+      <source src="1.mp4" type="video/mp4">
+      Browser Anda tidak mendukung video HTML5.
+    </video>
+    <div class="content-box">
+      <p>Kepada Yth. Bapak/Ibu/Saudara/i:</p>
+      <!-- Nama tamu akan otomatis berubah melalui JavaScript dari parameter URL (?to=NamaTamu) -->
+      <h3 id="nama-tamu" style="margin-top: 8px; color: #111;">-</h3>
+      <br>
+      <a href="#pengantin" class="btn">Buka Undangan</a>
+    </div>
+  </section>
+
+
+  <!-- ==========================================
+       SECTION 2: NAMA PENGANTIN
+       ========================================== -->
+  <section id="pengantin" class="section">
+    <video class="bg-video" autoplay muted loop playsinline>
+      <source src="2.mp4" type="video/mp4">
+    </video>
+  </section>
+
+  <!-- ==========================================
+       SECTION 3: INFORMASI ACARA
+       ========================================== -->
+  <section id="acara" class="section">
+    <video class="bg-video" autoplay muted loop playsinline>
+      <source src="3.mp4" type="video/mp4">
+    </video>
+    < class="content-box">
+  </section>
+
+  <!-- ==========================================
+       SECTION 4: COUNTDOWN ACARA
+       ========================================== -->
+  <section id="countdown" class="section">
+    <video class="bg-video" autoplay muted loop playsinline>
+      <source src="5.mp4" type="video/mp4">
+    </video>
+    <div class="content-box">
+      <h2>Hitung Mundur</h2>
+      <div class="timer-container">
+        <div class="timer-box"><span id="days">0</span><br><small>Hari</small></div>
+        <div class="timer-box"><span id="hours">0</span><br><small>Jam</small></div>
+        <div class="timer-box"><span id="minutes">0</span><br><small>Menit</small></div>
+        <div class="timer-box"><span id="seconds">0</span><br><small>Detik</small></div>
+      </div>
+      <!-- Pesan jika waktu acara telah terlewati -->
+      <div id="countdown-status" class="timer-status"></div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 5: RSVP
+       ========================================== -->
+  <section id="rsvp" class="section">
+    <video class="bg-video" autoplay muted loop playsinline>
+      <source src="5.mp4" type="video/mp4">
+    </video>
+    <div class="content-box">
+      <h2>Konfirmasi Kehadiran</h2>
+      <form id="rsvp-form" onsubmit="submitRSVP(event)" style="margin-top: 15px;">
+        <div class="form-group">
+          <label for="input-nama">Nama Guest:</label>
+          <input type="text" id="input-nama" name="nama" required>
+        </div>
+        <div class="form-group">
+          <label for="input-kehadiran">Kehadiran:</label>
+          <select id="input-kehadiran" name="kehadiran" required>
+            <option value="">-- Pilih Kehadiran --</option>
+            <option value="Hadir">Hadir</option>
+            <option value="Tidak Hadir">Tidak Hadir</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="input-jumlah">Jumlah Tamu:</label>
+          <input type="number" id="input-jumlah" name="jumlah" value="1" min="1" max="5">
+        </div>
+        <button type="submit" class="btn" style="width: 100%;">Kirim RSVP</button>
+      </form>
+      <div id="rsvp-message" style="margin-top: 10px; display: none; color: green;"></div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 6: GIFT / AMPLOP DIGITAL
+       ========================================== -->
+  <section id="gift" class="section">
+    <video class="bg-video" autoplay muted loop playsinline>
+      <source src="5.mp4" type="video/mp4">
+    </video>
+    <div class="content-box">
+      <h2>Wedding Gift</h2>
+      <p style="margin: 10px 0;">Doa restu Anda merupakan hadiah terindah bagi kami. Namun jika ingin memberi hadiah, Anda dapat menyalurkannya melalui:</p>
+      
+      <div style="text-align: left; background: #eee; padding: 12px; border-radius: 4px; margin-bottom: 10px;">
+        <p><strong>DANA</strong></p>
+        <p>No. Dana: 082318378280</p>
+        <p>Siti Roroh</p>
+      </div>
+
+      <div style="text-align: left; background: #eee; padding: 12px; border-radius: 4px;">
+        <p><strong>DANA</strong></p>
+        <p>No. Dana: 082120170113</p>
+        <p>Akbar Moh. Ramdhan</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 7: PENUTUP
+       ========================================== -->
+  <section id="penutup" class="section">
+    <video class="bg-video" autoplay muted loop playsinline>
+      <source src="4.mp4" type="video/mp4">
+    </video>
+  </section>
+
+  <!-- ==========================================
+       NAVIGASI BAWAH TENGAH
+       ========================================== -->
+  <nav class="navbar-bottom">
+    <!-- Ikon SVG Menggunakan File Lokal (Contoh: icon-home.svg di folder lokal) -->
+    <a href="#cover" aria-label="Cover">
+      <img src="icon-home.svg" class="nav-icon" alt="Home" onerror="this.outerHTML='🏠'">
+    </a>
+    <a href="#pengantin" aria-label="Pengantin">
+      <img src="icon-user.svg" class="nav-icon" alt="Pengantin" onerror="this.outerHTML=':)'">
+    </a>
+    <a href="#acara" aria-label="Acara">
+      <img src="icon-calendar.svg" class="nav-icon" alt="Acara" onerror="this.outerHTML='📅'">
+    </a>
+    <a href="#rsvp" aria-label="RSVP">
+      <img src="icon-mail.svg" class="nav-icon" alt="RSVP" onerror="this.outerHTML='✉️'">
+    </a>
+  </nav>
+
+  <!-- ==========================================
+       LOGIKA JAVASCRIPT
+       ========================================== -->
+  <script>
+    // ------------------------------------------
+    // 1. Ambil Nama Tamu dari Parameter URL (?to=NamaTamu)
+    // ------------------------------------------
+    const urlParams = new URLSearchParams(window.location.search);
+    const namaTamu = urlParams.get('to');
+    
+    if (namaTamu) {
+      document.getElementById('nama-tamu').innerText = namaTamu;
+      document.getElementById('input-nama').value = namaTamu;
+    } else {
+      document.getElementById('nama-tamu').innerText = 'Tamu Undangan';
+    }
+
+    // ------------------------------------------
+    // 2. Logika Countdown Acara
+    // ------------------------------------------
+    // Ubah tanggal di bawah ini sesuai tanggal acara (Format: YYYY-MM-DDTHH:mm:ss)
+    const eventDate = new Date("2026-11-26T08:00:00").getTime();
+
+    function updateCountdown() {
+      const now = new Date().getTime();
+      const distance = eventDate - now;
+
+      // Hitung sisa waktu
+      const days = Math.floor(Math.abs(distance) / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((Math.abs(distance) % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((Math.abs(distance) % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((Math.abs(distance) % (1000 * 60)) / 1000);
+
+      // Tampilkan angka ke HTML (tetap tampil angka 0 atau hitungan walau sudah lewat)
+      document.getElementById("days").innerText = days;
+      document.getElementById("hours").innerText = hours;
+      document.getElementById("minutes").innerText = minutes;
+      document.getElementById("seconds").innerText = seconds;
+
+      // Jika waktu acara sudah terlewati
+      if (distance < 0) {
+        document.getElementById("countdown-status").innerText = "Acara telah selesai";
+      }
+    }
+    // Jalankan countdown setiap 1 detik
+    setInterval(updateCountdown, 1000);
+    updateCountdown();
+
+    // ------------------------------------------
+    // 3. Kontrol Musik Background
+    // ------------------------------------------
+    const music = document.getElementById("bg-music");
+    const musicBtn = document.getElementById("music-btn");
+    let isPlaying = false;
+
+    function toggleMusic() {
+      if (isPlaying) {
+        music.pause();
+        musicBtn.innerText = "🔇";
+      } else {
+        music.play();
+        musicBtn.innerText = "🎵";
+      }
+      isPlaying = !isPlaying;
+    }
+
+    // ------------------------------------------
+    // 4. Integrasi Form RSVP (Contoh Ke Google Apps Script)
+    // ------------------------------------------
+    function submitRSVP(e) {
+      e.preventDefault();
+      const msgBox = document.getElementById("rsvp-message");
+      msgBox.style.display = "block";
+      msgBox.innerText = "Mengirim data...";
+
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData.entries());
+
+      /* 
+         CATATAN PENGEMBANGAN:
+         Ganti URL di bawah dengan Web App URL dari Google Apps Script kamu.
+         Contoh:
+         fetch('https://script.google.com/macros/s/AKfycbx.../exec', {
+           method: 'POST',
+           body: JSON.stringify(data)
+         })
+      */
+
+      // Simulasi pengiriman data berhasil
+      setTimeout(() => {
+        msgBox.innerText = "Terima kasih, konfirmasi Anda telah terkirim!";
+        e.target.reset();
+      }, 1000);
+    }
+  </script>
+</body>
+</html>
